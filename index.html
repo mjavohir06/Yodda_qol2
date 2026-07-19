@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Yodda Qol</title>
+<meta name="theme-color" content="#2F6F5E" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+  :root{
+    --ink:#2B2620; --paper:#FFFDF8; --kraft:#E7DBC6; --kraft-dark:#D9C9AC;
+    --green:#2F6F5E; --brass:#A97C3F; --rust:#A24632; --muted:#8A7F6A;
+    --font-display:'Fraunces',Georgia,serif; --font-body:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--kraft);color:var(--ink);font-family:var(--font-body);}
+  #app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;background:var(--kraft);}
+  .header{padding:24px 20px 16px;display:flex;justify-content:space-between;align-items:flex-end;}
+  .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.15em;color:var(--brass);text-transform:uppercase;margin:0;}
+  h1{font-family:var(--font-display);font-weight:600;font-size:30px;margin:2px 0 0;}
+  .count{font-family:var(--font-mono);font-size:12px;color:var(--muted);}
+  .content{flex:1;padding:0 20px 90px;overflow-y:auto;}
+  .hidden{display:none !important;}
+  .btn{cursor:pointer;border:none;font-family:var(--font-body);}
+  .btn-primary{background:var(--green);color:var(--paper);font-weight:600;font-size:14px;padding:13px;border-radius:999px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .btn-outline{background:transparent;border:1px solid var(--kraft-dark);color:var(--muted);border-radius:999px;padding:12px;font-size:14px;}
+  .camera-box{background:var(--paper);border:1.5px dashed var(--kraft-dark);border-radius:8px;padding:60px 24px;display:flex;flex-direction:column;align-items:center;text-align:center;}
+  .icon-circle{width:84px;height:84px;border-radius:50%;background:var(--kraft);display:flex;align-items:center;justify-content:center;margin-bottom:18px;font-size:34px;}
+  .muted{color:var(--muted);}
+  .card{background:var(--paper);border:1px solid var(--kraft-dark);border-radius:8px;overflow:hidden;position:relative;}
+  .person-row{display:flex;align-items:center;gap:12px;padding:12px;margin-bottom:12px;text-align:left;width:100%;background:var(--paper);border:1px solid var(--kraft-dark);border-radius:8px;position:relative;}
+  .thumb{width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--kraft-dark);flex-shrink:0;}
+  .name{font-family:var(--font-display);font-weight:600;font-size:16px;margin:0;}
+  .snippet{font-size:12px;color:var(--muted);margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .catno{font-family:var(--font-mono);font-size:10px;color:var(--brass);}
+  .search{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:var(--paper);border:1px solid var(--kraft-dark);margin-bottom:18px;}
+  .search input{border:none;background:transparent;flex:1;font-size:14px;font-family:var(--font-body);}
+  input,textarea{width:100%;padding:10px 12px;border-radius:6px;border:1px solid var(--kraft-dark);background:var(--paper);font-family:var(--font-body);font-size:15px;margin-bottom:16px;}
+  label{display:block;font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:.05em;margin-bottom:6px;}
+  .tabbar{position:sticky;bottom:0;left:0;right:0;display:flex;justify-content:space-around;padding:12px 0;background:var(--paper);border-top:1px solid var(--kraft-dark);}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;padding:4px 24px;cursor:pointer;}
+  .tab span{font-size:11px;font-family:var(--font-body);}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .link-btn{background:none;border:none;display:flex;align-items:center;gap:4px;font-size:14px;cursor:pointer;color:var(--muted);}
+  img.preview{width:100%;max-height:320px;object-fit:cover;display:block;}
+  .retake{position:absolute;bottom:10px;right:10px;background:rgba(43,38,32,.75);color:var(--paper);border:none;border-radius:999px;padding:7px 12px;font-size:12px;}
+  .hole{width:10px;height:10px;border-radius:50%;background:var(--kraft);box-shadow:inset 0 1px 2px rgba(0,0,0,.25);position:absolute;top:-6px;}
+  .empty{text-align:center;padding:60px 0;color:var(--muted);font-size:14px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div>
+      <p class="eyebrow">Shaxsiy katalog</p>
+      <h1>Yodda Qol</h1>
+    </div>
+    <div style="text-align:right;">
+      <div class="count" id="peopleCount">0 ta karta</div>
+      <div style="margin-top:6px;display:flex;gap:10px;justify-content:flex-end;">
+        <button onclick="exportData()" title="Zaxira nusxa" style="background:none;border:none;font-size:18px;cursor:pointer;padding:0;">💾</button>
+        <button onclick="document.getElementById('backupInput').click()" title="Tiklash" style="background:none;border:none;font-size:18px;cursor:pointer;padding:0;">📂</button>
+        <button onclick="changeFolder()" title="Saqlash papkasini tanlash" style="background:none;border:none;font-size:18px;cursor:pointer;padding:0;">📁</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="content" id="content"></div>
+
+  <div class="tabbar" id="tabbar">
+    <button class="tab" onclick="goTo('camera')"><span id="tabCameraIcon">📷</span><span id="tabCameraLabel">Rasmga olish</span></button>
+    <button class="tab" onclick="goTo('list')"><span id="tabListIcon">👥</span><span id="tabListLabel">Odamlar</span></button>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" capture="environment" class="hidden" />
+<input type="file" id="galleryInput" accept="image/*" class="hidden" />
+<input type="file" id="backupInput" accept="application/json" class="hidden" />
+
+<script>
+const STORAGE_KEY = 'yodda_qol_people';
+let people = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let view = 'camera';
+let draftPhoto = null;
+let editingId = null;
+
+function persist(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(people)); document.getElementById('peopleCount').textContent = people.length + ' ta karta'; }
+
+// --- Papka xotirasi (IndexedDB orqali tanlangan papkani eslab qolish) ---
+function openHandleDB(){
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('yodda_qol_fs', 1);
+    req.onupgradeneeded = () => { req.result.createObjectStore('handles'); };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function getStoredDirHandle(){
+  try {
+    const db = await openHandleDB();
+    return await new Promise((resolve) => {
+      const tx = db.transaction('handles','readonly');
+      const r = tx.objectStore('handles').get('exportDir');
+      r.onsuccess = () => resolve(r.result || null);
+      r.onerror = () => resolve(null);
+    });
+  } catch(e){ return null; }
+}
+async function storeDirHandle(handle){
+  try {
+    const db = await openHandleDB();
+    await new Promise((resolve) => {
+      const tx = db.transaction('handles','readwrite');
+      tx.objectStore('handles').put(handle, 'exportDir');
+      tx.oncomplete = () => resolve();
+    });
+  } catch(e){}
+}
+
+async function pickFolder(){
+  if(!('showDirectoryPicker' in window)) return null;
+  try {
+    const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    await storeDirHandle(handle);
+    return handle;
+  } catch(err){ return null; } // foydalanuvchi bekor qildi
+}
+
+async function changeFolder(){
+  const handle = await pickFolder();
+  if(handle){
+    alert(`Endi zaxira nusxalar shu papkaga saqlanadi: "${handle.name}"`);
+  } else if(!('showDirectoryPicker' in window)){
+    alert("Bu qurilmada papka tanlash imkoniyati yo'q. Fayllar avtomatik 'Yuklamalar' papkasiga saqlanadi.");
+  }
+}
+
+function fallbackDownload(dataStr, filename){
+  const blob = new Blob([dataStr], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  alert("Zaxira nusxa 'Yuklamalar' (Downloads) papkasiga saqlandi.");
+}
+
+async function exportData(){
+  if(people.length === 0){ alert("Hali saqlangan ma'lumot yo'q."); return; }
+  const dataStr = JSON.stringify(people, null, 2);
+  const dateStr = new Date().toISOString().slice(0,10);
+  const filename = `yodda-qol-zaxira-${dateStr}.json`;
+
+  if(!('showDirectoryPicker' in window)){
+    fallbackDownload(dataStr, filename);
+    return;
+  }
+
+  let dirHandle = await getStoredDirHandle();
+  if(dirHandle){
+    try {
+      const perm = await dirHandle.queryPermission({mode:'readwrite'});
+      if(perm !== 'granted'){
+        const req = await dirHandle.requestPermission({mode:'readwrite'});
+        if(req !== 'granted') dirHandle = null;
+      }
+    } catch(e){ dirHandle = null; }
+  }
+  if(!dirHandle){
+    dirHandle = await pickFolder();
+    if(!dirHandle){ fallbackDownload(dataStr, filename); return; }
+  }
+
+  try {
+    const fileHandle = await dirHandle.getFileHandle(filename, {create:true});
+    const writable = await fileHandle.createWritable();
+    await writable.write(dataStr);
+    await writable.close();
+    alert(`Zaxira nusxa saqlandi:\n"${dirHandle.name}" papkasiga, ${filename} nomi bilan.`);
+  } catch(err){
+    fallbackDownload(dataStr, filename);
+  }
+}
+
+document.getElementById('backupInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if(!Array.isArray(imported)) throw new Error('invalid');
+      const replace = confirm(`Faylda ${imported.length} ta yozuv topildi.\n\nOK — mavjud ro'yxatni shu bilan almashtiradi\nBekor qilish — mavjudlarga qo'shib qo'yadi`);
+      if(replace){
+        people = imported;
+      } else {
+        const existingIds = new Set(people.map(p=>p.id));
+        const merged = [...people];
+        imported.forEach(p => { if(!existingIds.has(p.id)) merged.unshift(p); });
+        people = merged;
+      }
+      persist();
+      view = 'list';
+      render();
+      alert("Ma'lumotlar tiklandi.");
+    } catch(err){
+      alert("Fayl noto'g'ri formatda. Bu ilova orqali yaratilgan zaxira faylini tanlang.");
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+function goTo(v){ view = v; render(); }
+
+function handleFile(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      const maxW = 520;
+      const scale = Math.min(1, maxW/img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width*scale);
+      canvas.height = Math.round(img.height*scale);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+      draftPhoto = canvas.toDataURL('image/jpeg',0.75);
+      view = editingId ? 'edit' : 'form';
+      render();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+document.getElementById('fileInput').addEventListener('change', handleFile);
+document.getElementById('galleryInput').addEventListener('change', handleFile);
+
+function openCamera(){ document.getElementById('fileInput').click(); }
+function openGallery(){ document.getElementById('galleryInput').click(); }
+
+function render(){
+  const content = document.getElementById('content');
+  document.getElementById('tabbar').classList.toggle('hidden', view==='form'||view==='edit'||view==='detail');
+  document.getElementById('tabCameraIcon').style.opacity = view==='camera'?1:.6;
+  document.getElementById('tabListIcon').style.opacity = view==='list'?1:.6;
+
+  if(view==='camera'){
+    content.innerHTML = `
+      <div class="camera-box">
+        <div class="icon-circle">📷</div>
+        <p class="muted" style="font-size:14px;margin:0 0 4px;">Odamning rasmini oling</p>
+        <p class="muted" style="font-size:12px;max-width:220px;margin:0 0 20px;">Ism va ma'lumotini yozib qo'yasiz, keyin hech qachon unutmaysiz</p>
+        <button class="btn btn-primary" style="width:auto;padding:12px 24px;" onclick="openCamera()">📷 Kamera ochish</button>
+      </div>
+      <div style="text-align:center;margin-top:14px;">
+        <button class="link-btn" style="margin:0 auto;color:var(--brass);" onclick="openGallery()">🖼️ yoki galereyadan tanlang</button>
+      </div>
+      ${people.length ? `<p class="muted" style="text-align:center;margin-top:40px;font-family:var(--font-mono);font-size:12px;">Hozircha ${people.length} ta odam saqlangan &mdash; "Odamlar" bo'limida ko'ring</p>` : ''}
+    `;
+  }
+
+  if(view==='form' || view==='edit'){
+    const p = editingId ? people.find(x=>x.id===editingId) : null;
+    content.innerHTML = `
+      <div class="topbar">
+        <button class="link-btn" onclick="cancelForm()">‹ Bekor qilish</button>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--brass);letter-spacing:.1em;">${editingId?'TAHRIRLASH':'YANGI KARTA'}</span>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        <img class="preview" src="${draftPhoto || (p?p.photo:'')}" />
+        <button class="retake" onclick="openCamera()">📷 Qayta olish</button>
+      </div>
+      <label>ISM *</label>
+      <input id="nameInput" placeholder="Masalan: Aziz aka" value="${p?escapeHtml(p.name):''}" />
+      <label>MA'LUMOT</label>
+      <textarea id="infoInput" rows="4" placeholder="Qayerda tanishdingiz, kasbi, aloqa raqami...">${p?escapeHtml(p.info):''}</textarea>
+      <button class="btn btn-primary" onclick="savePerson()">✓ Saqlash</button>
+    `;
+  }
+
+  if(view==='list'){
+    const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+    const filtered = people.filter(p => p.name.toLowerCase().includes(search) || p.info.toLowerCase().includes(search));
+    content.innerHTML = `
+      <div class="search">
+        🔍 <input id="searchInput" placeholder="Ism yoki ma'lumot bo'yicha qidirish..." oninput="render()" value="${escapeHtml(search)}" />
+      </div>
+      ${people.length===0 ? `<div class="empty">Hali hech kim saqlanmagan.<br/>Suratga oling va birinchi kartani yarating.</div>` : ''}
+      ${people.length>0 && filtered.length===0 ? `<div class="empty">Hech narsa topilmadi.</div>` : ''}
+      ${filtered.map((p,idx)=>`
+        <button class="person-row" onclick="openDetail('${p.id}')">
+          <span class="hole" style="left:16px;"></span><span class="hole" style="left:56px;"></span>
+          <img class="thumb" src="${p.photo}" />
+          <div style="flex:1;min-width:0;text-align:left;">
+            <p class="name">${escapeHtml(p.name)}</p>
+            <p class="snippet">${escapeHtml(p.info || "Ma'lumot kiritilmagan")}</p>
+          </div>
+          <span class="catno">№${String(idx+1).padStart(3,'0')}</span>
+        </button>
+      `).join('')}
+    `;
+    // restore focus to search field if it was focused
+  }
+
+  if(view==='detail'){
+    const p = people.find(x=>x.id===editingId);
+    if(!p){ view='list'; render(); return; }
+    content.innerHTML = `
+      <div class="topbar">
+        <button class="link-btn" onclick="goTo('list')">‹ Orqaga</button>
+        <button class="link-btn" style="color:var(--green);" onclick="editingId='${p.id}';view='edit';draftPhoto=null;render()">✎ Tahrirlash</button>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <img class="preview" src="${p.photo}" />
+        <div style="padding:16px;">
+          <h2 style="font-family:var(--font-display);font-weight:700;font-size:24px;margin:0;">${escapeHtml(p.name)}</h2>
+          <p style="margin:10px 0 0;font-size:14px;line-height:1.5;white-space:pre-wrap;">${escapeHtml(p.info || "Ma'lumot kiritilmagan.")}</p>
+          <p class="muted" style="margin-top:16px;font-family:var(--font-mono);font-size:11px;">Qo'shilgan sana: ${new Date(p.createdAt).toLocaleDateString('uz-UZ')}</p>
+        </div>
+      </div>
+      <div id="deleteZone"></div>
+    `;
+    document.getElementById('deleteZone').innerHTML = `<button class="btn btn-outline" style="width:100%;border-color:var(--rust);color:var(--rust);" onclick="confirmDelete('${p.id}')">🗑 O'chirish</button>`;
+  }
+}
+
+function confirmDelete(id){
+  document.getElementById('deleteZone').innerHTML = `
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-outline" style="flex:1;" onclick="render()">Bekor qilish</button>
+      <button class="btn" style="flex:1;background:var(--rust);color:var(--paper);border-radius:999px;padding:12px;" onclick="deletePerson('${id}')">✕ Ha, o'chirish</button>
+    </div>`;
+}
+
+function deletePerson(id){
+  people = people.filter(p=>p.id!==id);
+  persist();
+  goTo('list');
+}
+
+function openDetail(id){ editingId = id; view = 'detail'; render(); }
+
+function cancelForm(){
+  draftPhoto = null;
+  view = editingId ? 'detail' : 'camera';
+  render();
+}
+
+function savePerson(){
+  const name = document.getElementById('nameInput').value.trim();
+  const info = document.getElementById('infoInput').value.trim();
+  if(!name) return;
+  if(editingId){
+    const p = people.find(x=>x.id===editingId);
+    p.name = name; p.info = info; if(draftPhoto) p.photo = draftPhoto;
+  } else {
+    people.unshift({ id: Date.now().toString(), name, info, photo: draftPhoto, createdAt: new Date().toISOString() });
+  }
+  persist();
+  draftPhoto = null;
+  const wasEditing = !!editingId;
+  editingId = null;
+  view = 'list';
+  render();
+}
+
+function escapeHtml(str){
+  return (str||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+persist();
+render();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+}
+</script>
+</body>
+</html>
